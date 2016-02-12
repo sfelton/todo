@@ -29,7 +29,10 @@ def Version():
     print("todo v{}".format(VERSION))
 
 def add_task():
-    desc=input("Task description: ")
+    if len(sys.argv) == 3:
+        desc = sys.argv[2]
+    else:
+        desc=input("Task description: ")
     temp_task = Task(desc)
     with open(TODO_FILE, mode='a', encoding='utf-8') as f:
         f.write(temp_task.__str__())
