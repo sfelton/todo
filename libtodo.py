@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-#import os
 from os.path import isfile
+from sys import stderr
 
 #--------[ Classes ]-----------------------------------------------------------
 class Task(object):
@@ -65,4 +65,36 @@ def print_numbered_tasks(tasks):
     for t in tasks:
         print("({:>2}) {}".format(ctr, t))
         ctr += 1
+
+#### check_file_structure #######################################
+#                                                               #
+# input:  file path to todo file                                #
+# output: True/False if file passes test                        #
+#                                                               #
+# What to check for:                                            #
+#   1) File exists
+#   2) File begins with a project                               #
+#   3) All lines are a project or a task                        #
+#                                                               #
+#################################################################
+def check_file_structure(filename, verbose=False):
+    if verbose: print("Checking file structure of '{}'...\n".format(filename))
+# 1) Check if file exists
+    if verbose: print("Does todo tile exist...?")
+    if not isfile(filename):
+        print("File '{}' does not exist.".format(filename), file=stderr)
+        if verbose:
+            ans=input("Would you like to create a new todo file? ")
+            if ans == "yes" or ans == "y":
+                create_file = open(filename, mode='w')
+                create_file.close()
+                print("Todo file created at " + filename)
+            else:
+                exit(1)
+    
+
+
+
+
+
 

@@ -29,6 +29,7 @@ a | add     <task>      Add a task to todo list
 f | finish  <task ID>   Finish a task
 h | help                Print help
 l | list                List tasks
+  | test                Tesk todo file structure
 v | version             Print todo version
 ''')
 
@@ -38,6 +39,15 @@ v | version             Print todo version
 #########################################################
 def Version():
     print("todo v{}".format(VERSION))
+
+#### list_tasks #########################################
+#                                                       #
+# List all tasks in todo list                           #
+#########################################################
+def list_tasks():
+    tasks = lib.read_tasks_from_file(TODO_FILE)
+    lib.print_tasks(tasks)
+    print()
 
 #### add_task ###########################################
 #                                                       #
@@ -110,14 +120,15 @@ def unfinish_task():
     tasks[num-1].completed=False
     lib.write_tasks_to_file(tasks, TODO_FILE)
 
-#### list_tasks #########################################
+#### test_file ##########################################
 #                                                       #
-# List all tasks in todo list                           #
+# Test the todo file structure                          #
+#                                                       #
+# Run the todo file through a series of tests to see if #
+# it can be read and manipulated by this program.       #
 #########################################################
-def list_tasks():
-    tasks = lib.read_tasks_from_file(TODO_FILE)
-    lib.print_tasks(tasks)
-    print()
+def test_file():
+    lib.check_file_structure(TODO_FILE, True)
 
 #--------[ Main ]--------------------------------------------------------------
 if len(sys.argv) == 1:
@@ -138,6 +149,7 @@ argument_parser = { "a" : add_task,
                     "finish": finish_task,
                     "help"  : Usage,
                     "list"  : list_tasks,
+                    "test"  : test_file,
                     "version": Version }
 
 #Check the first argument and default to Usage()
