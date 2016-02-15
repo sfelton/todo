@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+#--------[ Imports ]-----------------------------------------------------------
 import sys
 import os
 import libtodo as lib
@@ -116,6 +117,7 @@ def unfinish_task():
 def list_tasks():
     tasks = lib.read_tasks_from_file(TODO_FILE)
     lib.print_tasks(tasks)
+    print()
 
 #--------[ Main ]--------------------------------------------------------------
 if len(sys.argv) == 1:

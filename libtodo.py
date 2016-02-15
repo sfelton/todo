@@ -16,6 +16,15 @@ class Task(object):
         else:
             return "[ ] {}".format(self.description)
 
+class Project(object):
+
+    def __init__(self, n):
+        self.tasks=[]
+        self.name=n
+    
+    def add_task(self, t):
+        self.tasks.append(t)
+
 #--------[ Methods ]-----------------------------------------------------------
 def read_tasks_from_file(filename):
     if isfile(filename):
