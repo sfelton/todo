@@ -27,7 +27,25 @@ class Project(object):
         self.tasks.append(t)
 
 #--------[ Methods ]-----------------------------------------------------------
-def read_tasks_from_file(filename):
+#### read_todo_file #############################################
+#                                                               #
+# input : filename (string)                                     #
+# output: array of projects, each projects contains array       #
+#         of tasks                                              #
+#                                                               #
+# Read the input file line by line. Create a project when one   #
+# is found in the todo file. Every task after that will be      #
+# placed in the project until another project is encountered.   #
+# Push all projects into an array and return that array.        #
+#################################################################
+def read_todo_file(filename):
+    # Check the structure of the file before reading it
+    ret = check_file_structure(filename)
+    if ret != 0:
+        print("ERROR: todo file is not structured properly", file=stderr)
+        print("       run 'todo test' to help resolve issues", file =stderr)
+        exit(2)
+
     if isfile(filename):
         tasks = []
         with open(filename, encoding='utf-8') as f:
@@ -49,17 +67,38 @@ def read_tasks_from_file(filename):
         create_file = open(filename, mode="w")
         create_file.close()
 
+#### write_todo_file ############################################
+#                                                               #
+# input :                                                       #
+# output:                                                       #
+#                                                               #
+#                                                               #
+#################################################################
 def write_tasks_to_file(tasks, filename):
     with open(filename, mode="w", encoding='utf-8') as f:
         for t in tasks:
             f.write(t.__str__())
             f.write('\n')
 
+#### print_tasks ################################################
+#                                                               #
+# input :                                                       #
+# output:                                                       #
+#                                                               #
+#                                                               #
+#################################################################
 def print_tasks(tasks):
     print("--------TODO List--------")
     for t in tasks:
         print(t)
 
+#### print_numbered_tasks #######################################
+#                                                               #
+# input :                                                       #
+# output:                                                       #
+#                                                               #
+#                                                               #
+#################################################################
 def print_numbered_tasks(tasks):
     print("--------TODO List--------")
     ctr = 1;
@@ -101,7 +140,7 @@ def check_file_structure(filename, verbose=False):
         if verbose: print("   The file is empty")
         return 0
     else:
-        print("   The file is not empty!")
+        if verbose: print("   The file is not empty!")
         
 # 2) Check if the file begins with a project
     if verbose: print("\nDoes the file begin with a project...?")

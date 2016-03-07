@@ -45,7 +45,7 @@ def Version():
 # List all tasks in todo list                           #
 #########################################################
 def list_tasks():
-    tasks = lib.read_tasks_from_file(TODO_FILE)
+    tasks = lib.read_todo_file(TODO_FILE)
     lib.print_tasks(tasks)
     print()
 
@@ -74,7 +74,7 @@ def add_task():
 # one to delete. Then delete that task if it exists     #
 #########################################################
 def delete_task():
-    tasks = lib.read_tasks_from_file(TODO_FILE)
+    tasks = lib.read_todo_file(TODO_FILE)
     lib.print_numbered_tasks(tasks)
     num=int(input("Which task would you like to delete? "))
     if (num < 1) or (num > len(tasks)):
@@ -93,7 +93,7 @@ def delete_task():
 # printed.                                              #
 #########################################################
 def finish_task():
-    tasks = lib.read_tasks_from_file(TODO_FILE)
+    tasks = lib.read_todo_file(TODO_FILE)
     lib.print_numbered_tasks(tasks)
     num=int(input("Which task did you complete? "))
     if (num < 1) or (num > len(tasks)):
@@ -111,7 +111,7 @@ def finish_task():
 # as not complete, no error or warning is printed.      #
 #########################################################
 def unfinish_task():
-    tasks = lib.read_tasks_from_file(TODO_FILE)
+    tasks = lib.read_todo_file(TODO_FILE)
     lib.print_numbered_tasks(tasks)
     num=int(input("Which task did you complete? "))
     if (num < 1) or (num > len(tasks)):
@@ -128,7 +128,7 @@ def unfinish_task():
 # it can be read and manipulated by this program.       #
 #########################################################
 def test_file():
-    lib.check_file_structure(TODO_FILE, True)
+    retval = lib.check_file_structure(TODO_FILE, True)
 
 #--------[ Main ]--------------------------------------------------------------
 if len(sys.argv) == 1:
