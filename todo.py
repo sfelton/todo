@@ -7,7 +7,7 @@ import libtodo as lib
 from libtodo import Task
 
 #--------[ GLOBALS ]-----------------------------------------------------------
-VERSION     = "0.1"
+VERSION     = "0.2"
 FILENAME    = "todo.txt"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
 TODO_FILE   = str(TODO_DIR+"/"+FILENAME)
@@ -45,8 +45,9 @@ def Version():
 # List all tasks in todo list                           #
 #########################################################
 def list_tasks():
-    tasks = lib.read_todo_file(TODO_FILE)
-    lib.print_tasks(tasks)
+    print("--------TODO List--------")
+    file_data = lib.read_todo_file(TODO_FILE)
+    lib.list_all_tasks(file_data)
     print()
 
 #### add_task ###########################################

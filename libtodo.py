@@ -46,26 +46,27 @@ def read_todo_file(filename):
         print("       run 'todo test' to help resolve issues", file =stderr)
         exit(2)
 
-    if isfile(filename):
-        tasks = []
-        with open(filename, encoding='utf-8') as f:
-            for line in f:
-                #The first characters of line will tell what it is
-                char_key = line[0:2]
-                if char_key[0]  == '[':
-                    temp_task = Task("Placeholder Description")
-                    temp_task.completed = True if line[1] == 'X' else False
-                    temp_task.description=line[4:-1]
-                    tasks.append(temp_task)
-                elif char_key == "GP":
-                    pass
-                    #PLACEHOLDER for GROUPS
-        return tasks
-    else:
-        print("No todo file found!")
-        print("Creating todo file at " + filename)
-        create_file = open(filename, mode="w")
-        create_file.close()
+    projects = []
+    with open(filename, encoding='utf-8') as f:
+        for line in f:
+            #The first characters of line will tell what it is
+            char_key = line[0:2]
+            if char_key[0]  == '[':
+                temp_task = Task("Placeholder Description")
+                temp_task.completed = True if line[1] == 'X' else False
+                temp_task.description=line[4:-1]
+                temp_project.add_task(temp_task)
+            elif char_key == "PR":
+                if 'temp_project' in locals():
+                  projects.append(temp_project)  
+                  del temp_project
+
+                project_desc=line[4:-1]
+                temp_project = Project(project_desc)
+        #Push the last project onto the array
+        projects.append(temp_project)
+
+    return projects
 
 #### write_todo_file ############################################
 #                                                               #
@@ -80,31 +81,39 @@ def write_tasks_to_file(tasks, filename):
             f.write(t.__str__())
             f.write('\n')
 
+#### list_all_tasks #############################################
+#                                                               #
+# input : Array of projects to be printed                       #
+# output: Print all projects and contained tasks to terminal    #
+#                                                               #
+# For each project:                                             #
+#                   1) Print Project Title                      #
+#                   2) Print percent complete                   #
+#                   3) Print all contained tasks                #
+#################################################################
+def list_all_tasks(projects):
+    for proj in projects:
+        print(proj.name)
+        print_tasks(proj.tasks, append=" ")
+        print()
+
 #### print_tasks ################################################
 #                                                               #
-# input :                                                       #
-# output:                                                       #
+# input : tasks - Array of tasks to print out                   #
+#         numbered - Number to start numbering at, -1 for no    #
+#                    numbering                                  #
+#         append - String to append to each line                #
+# output: print each task according to arguments                #
 #                                                               #
-#                                                               #
+# This method can be called from any function wanting to print  #
+# an array of tasks. The arguments should cover anything needed #
+# by calling methods                                            #
 #################################################################
-def print_tasks(tasks):
-    print("--------TODO List--------")
+def print_tasks(tasks, numbering=-1, append=""):
     for t in tasks:
-        print(t)
+        print("{}{}".format(append,t))
 
-#### print_numbered_tasks #######################################
-#                                                               #
-# input :                                                       #
-# output:                                                       #
-#                                                               #
-#                                                               #
-#################################################################
-def print_numbered_tasks(tasks):
-    print("--------TODO List--------")
-    ctr = 1;
-    for t in tasks:
-        print("({:>2}) {}".format(ctr, t))
-        ctr += 1
+# NUMBERED: print("({:>2}) {}".format(ctr, t))
 
 #### check_file_structure #######################################
 #                                                               #
