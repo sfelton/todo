@@ -75,14 +75,14 @@ def add_task():
 # one to delete. Then delete that task if it exists     #
 #########################################################
 def delete_task():
-    tasks = lib.read_todo_file(TODO_FILE)
-    lib.print_numbered_tasks(tasks)
+    file_data = lib.read_todo_file(TODO_FILE)
+    lib.list_all_tasks(file_data, 1)
     num=int(input("Which task would you like to delete? "))
-    if (num < 1) or (num > len(tasks)):
+    if (num < 1) or (num > lib.count_all_tasks(file_data)):
         print("Task number doesn't exist")
         exit()
-    del tasks[num-1]
-    lib.write_tasks_to_file(tasks, TODO_FILE)
+    lib.alter_task_by_number(file_data, "delete", num)
+    lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### finish_task ########################################
 #                                                       #

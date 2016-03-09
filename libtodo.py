@@ -70,20 +70,25 @@ def read_todo_file(filename):
 
 #### write_todo_file ############################################
 #                                                               #
-# input :                                                       #
-# output:                                                       #
-#                                                               #
+# input : projects - array of projects                          #
+#         filename - path to todo file                          #
+# output: Writes todo file at the path specified                #
 #                                                               #
 #################################################################
-def write_tasks_to_file(tasks, filename):
+def write_tasks_to_file(projects, filename):
     with open(filename, mode="w", encoding='utf-8') as f:
-        for t in tasks:
-            f.write(t.__str__())
+        for p in projects:
+            f.write("PR  {}".format(p.name))
             f.write('\n')
+            for t in p.tasks:
+                f.write(t.__str__())
+                f.write('\n')
 
 #### list_all_tasks #############################################
 #                                                               #
-# input : Array of projects to be printed                       #
+# input : projects - Array of projects to be printed            #
+#         num      - Where to start numbering, -1 for no        #
+#                    numbering                                  #
 # output: Print all projects and contained tasks to terminal    #
 #                                                               #
 # For each project:                                             #
@@ -91,16 +96,24 @@ def write_tasks_to_file(tasks, filename):
 #                   2) Print percent complete                   #
 #                   3) Print all contained tasks                #
 #################################################################
-def list_all_tasks(projects):
-    for proj in projects:
-        print(proj.name)
-        print_tasks(proj.tasks, append=" ")
-        print()
+def list_all_tasks(projects, num=-1):
+    if num < 0:
+        for proj in projects:
+            print(proj.name)
+            print_tasks(proj.tasks, append=" ")
+            print()
+    else:
+        ctr = num
+        for proj in projects:
+            print(proj.name)
+            print_tasks(proj.tasks, numbering=ctr, append=" ")
+            ctr += len(proj.tasks)
+            print()
 
 #### print_tasks ################################################
 #                                                               #
 # input : tasks - Array of tasks to print out                   #
-#         numbered - Number to start numbering at, -1 for no    #
+#         numbering - Number to start numbering at, -1 for no    #
 #                    numbering                                  #
 #         append - String to append to each line                #
 # output: print each task according to arguments                #
@@ -110,10 +123,53 @@ def list_all_tasks(projects):
 # by calling methods                                            #
 #################################################################
 def print_tasks(tasks, numbering=-1, append=""):
-    for t in tasks:
-        print("{}{}".format(append,t))
+    if numbering < 0:
+        for t in tasks:
+            print("{}{}".format(append,t))
+    else:
+        ctr = numbering
+        for t in tasks:
+            print("{}({:>2}) {}".format(append,ctr,t))
+            ctr += 1
 
-# NUMBERED: print("({:>2}) {}".format(ctr, t))
+#### alter_task_by_number #######################################
+#                                                               #
+# input : projects - array of projects                          #
+#         action   - what to do to the task                     #
+#         number   - which task to do the action to             #
+#         start_num- number to start counting at, usually 1     #
+# output: return 0 if successful, non-0 otherwise               #
+#                                                               #
+# Inteded to be used when the user is prompted to choose a task #
+# from a numbered list. This will find the task designated by   #
+# the number, and do the chosen action.                         #
+# Acceptable Actions: delete, finish, unfinish                  #
+#################################################################
+def alter_task_by_number(projects, action, number, start_num=1):
+    # If number is not the range that this method will check
+    if number > (start_num + count_all_tasks(projects) - 1):
+        return 1
+    ctr = start_num
+    for proj in projects:
+        for task in proj.tasks:
+            if ctr == number:
+                #Found the correct task
+                if action == "delete":
+                    del task
+                    return 0
+                elif action == "finish":
+                    task.completed = True
+                    return 0
+                elif action == "unfinish":
+                    task.completed = False
+                    return 0
+                else:
+                    return 2
+            else:
+                ctr += 1       
+    # Shouldn't make it here but just in case
+    print("ERROR: task cannot be found in alter_task_by_number", file=stderr)
+    return 3
 
 #### check_file_structure #######################################
 #                                                               #
@@ -190,6 +246,24 @@ def check_file_structure(filename, verbose=False):
 
     if verbose: print("\nFile structure check complete. PASS")
     return 0;
+
+#--------[ Helper Methods ]----------------------------------------------------
+#### count_all_tasks ############################################
+#                                                               #
+# input : projects - array of projects                          #
+# output: return total number of tasks contain in those projects#
+#                                                               #
+# Go through each project and add the length of the tasks array #
+# in them.                                                      #
+#################################################################
+def count_all_tasks(projects):
+    num_tasks = 0
+    for proj in projects:
+        num_tasks += len(proj.tasks)
+    return num_tasks
+
+
+
 
 
 
