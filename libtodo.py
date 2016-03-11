@@ -110,6 +110,25 @@ def list_all_tasks(projects, num=-1):
             ctr += len(proj.tasks)
             print()
 
+#### list_all_projects ##########################################
+#                                                               #
+# input : projects - Array of projects to be printed            #
+#         num      - Where to start numbering, -1 for no        #
+#                    numbering                                  #
+# output: No return value                                       #
+#                                                               #
+# Print out all of the projects contained in the array given.   #
+# Do not print out any of the tasks for each project.           #
+#################################################################
+def list_all_projects(projects, num=-1):
+    ctr = num
+    for proj in projects:
+        if num < 0:
+            print(proj.name)
+        else:
+            print("({:<2}) {}".format(ctr, proj.name))
+            ctr += 1
+
 #### print_tasks ################################################
 #                                                               #
 # input : tasks - Array of tasks to print out                   #
@@ -151,11 +170,12 @@ def alter_task_by_number(projects, action, number, start_num=1):
         return 1
     ctr = start_num
     for proj in projects:
+        local_ctr = 0
         for task in proj.tasks:
             if ctr == number:
                 #Found the correct task
                 if action == "delete":
-                    del task
+                    del proj.tasks[local_ctr]
                     return 0
                 elif action == "finish":
                     task.completed = True
@@ -166,10 +186,74 @@ def alter_task_by_number(projects, action, number, start_num=1):
                 else:
                     return 2
             else:
+                local_ctr += 1
                 ctr += 1       
     # Shouldn't make it here but just in case
     print("ERROR: task cannot be found in alter_task_by_number", file=stderr)
     return 3
+
+#### alter_project_by_number ####################################
+#                                                               #
+# input : projects - array of projects                          #
+#         action   - what to do with the group                  #
+#         number   - which project to apply action to           #
+#         item     - any additional item needed for action      #
+#         start_num- number to start counting at, usually 1     #
+# output: return 0 if successful, non-0 otherwise               #
+#                                                               #
+# Alter an entire projects based on its index, usually used     #
+# when the user is given a numbered list of projects and gives  #
+# the index of their chosen project.                            #
+#                                                               #
+# Acceptabale Actions: add_task, delete, finish, unfinish       #
+#################################################################
+def alter_project_by_number(projects, action, number, item=None, start_num=1):
+    if (number > start_num + len(projects) - 1) or number < start_num:
+        print("Not a valid project index", file=stderr)
+        return 1
+    curr_proj = projects[number - start_num]
+    if action == "add_task":
+        if not type(item) is Task:
+            print("aler_project_by_nubmer: Given item isn't task!",
+                  file=stderr)
+            return 2
+        projects[number-start_num].add_task(item)
+        return 0
+    elif action == "delete":
+        print()
+        print("---- {} ----".format(curr_proj.name))
+        print_tasks(curr_proj.tasks)
+        ans = input("Do you really want to delete '{}'? "\
+                .format(curr_proj.name))
+        if not (ans == "y" or ans == "yes" or ans == "Y" or ans == "Yes"):
+            return 4
+        del projects[number - start_num]
+        return 0
+    elif action == "finish":
+        print()
+        print("---- {} ----".format(curr_proj.name))
+        print_tasks(curr_proj.tasks)
+        ans = input("Do you really want to finish '{}'? "\
+                .format(curr_proj.name))
+        if not (ans == "y" or ans == "yes" or ans == "Y" or ans == "Yes"):
+            return 4
+        for task in curr_proj.tasks:
+            task.completed = True
+        return 0
+    elif action == "unfinish":
+        print()
+        print("---- {} ----".format(curr_proj.name))
+        print_tasks(curr_proj.tasks)
+        ans = input("Do you really want to un-finish '{}'? "\
+                .format(curr_proj.name))
+        if not (ans == "y" or ans == "yes" or ans == "Y" or ans == "Yes"):
+            return 4
+        for task in curr_proj.tasks:
+            task.completed = False
+        return 0
+    else:
+        print("alter_project_by_number: action no supported", file=stderr)
+        return 3
 
 #### check_file_structure #######################################
 #                                                               #

@@ -7,7 +7,7 @@ import libtodo as lib
 from libtodo import Task
 
 #--------[ GLOBALS ]-----------------------------------------------------------
-VERSION     = "0.2"
+VERSION     = "0.3"
 FILENAME    = "todo.txt"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
 TODO_FILE   = str(TODO_DIR+"/"+FILENAME)
@@ -48,7 +48,6 @@ def list_tasks():
     print("--------TODO List--------")
     file_data = lib.read_todo_file(TODO_FILE)
     lib.list_all_tasks(file_data)
-    print()
 
 #### add_task ###########################################
 #                                                       #
@@ -63,9 +62,12 @@ def add_task():
     else:
         desc=input("Task description: ")
     temp_task = Task(desc)
-    with open(TODO_FILE, mode='a', encoding='utf-8') as f:
-        f.write(temp_task.__str__())
-        f.write('\n')
+    file_data = lib.read_todo_file(TODO_FILE)
+    print("--------Projects--------")
+    lib.list_all_projects(file_data, 1)
+    num=int(input("\nWhich group would you like to add this to? "))
+    lib.alter_project_by_number(file_data, "add_task", num, temp_task)
+    lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### delete_task ########################################
 #                                                       #
@@ -76,12 +78,23 @@ def add_task():
 #########################################################
 def delete_task():
     file_data = lib.read_todo_file(TODO_FILE)
-    lib.list_all_tasks(file_data, 1)
-    num=int(input("Which task would you like to delete? "))
-    if (num < 1) or (num > lib.count_all_tasks(file_data)):
-        print("Task number doesn't exist")
-        exit()
-    lib.alter_task_by_number(file_data, "delete", num)
+    if (len(sys.argv) > 2) and \
+       (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
+        print("--------Projects--------")
+        lib.list_all_projects(file_data, 1)
+        num=int(input("Which project would you like to delete? "))
+        if (num < 1) or (num > len(file_data)):
+            print("Project number doesn't exist")
+            exit()
+        lib.alter_project_by_number(file_data, "delete", num)
+    else:
+        lib.list_all_tasks(file_data, 1)
+        num=int(input("Which task would you like to delete? "))
+        if (num < 1) or (num > lib.count_all_tasks(file_data)):
+            print("Task number doesn't exist")
+            exit()
+        lib.alter_task_by_number(file_data, "delete", num)
+
     lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### finish_task ########################################
@@ -94,14 +107,25 @@ def delete_task():
 # printed.                                              #
 #########################################################
 def finish_task():
-    tasks = lib.read_todo_file(TODO_FILE)
-    lib.print_numbered_tasks(tasks)
-    num=int(input("Which task did you complete? "))
-    if (num < 1) or (num > len(tasks)):
-        print("Task number doesn't exist")
-        exit()
-    tasks[num-1].completed=True
-    lib.write_tasks_to_file(tasks, TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE)
+    if (len(sys.argv) > 2) and \
+       (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
+        print("--------Projects--------")
+        lib.list_all_projects(file_data, 1)
+        num=int(input("Which project did you complete? "))
+        if (num < 1) or (num > len(file_data)):
+            print("Project number doesn't exist")
+            exit()
+        lib.alter_project_by_number(file_data, "finish", num)
+    else:
+        lib.list_all_tasks(file_data, 1)
+        num=int(input("Which task did you complete? "))
+        if (num < 1) or (num > lib.count_all_tasks(file_data)):
+            print("Task number doesn't exist")
+            exit()
+        lib.alter_task_by_number(file_data, "finish", num)
+
+    lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### unfinish_task ######################################
 #                                                       #
@@ -112,14 +136,25 @@ def finish_task():
 # as not complete, no error or warning is printed.      #
 #########################################################
 def unfinish_task():
-    tasks = lib.read_todo_file(TODO_FILE)
-    lib.print_numbered_tasks(tasks)
-    num=int(input("Which task did you complete? "))
-    if (num < 1) or (num > len(tasks)):
-        print("Task number doesn't exist")
-        exit()
-    tasks[num-1].completed=False
-    lib.write_tasks_to_file(tasks, TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE)
+    if (len(sys.argv) > 2) and \
+       (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
+        print("--------Projects--------")
+        lib.list_all_projects(file_data, 1)
+        num=int(input("Which project would you like to un-finish? "))
+        if (num < 1) or (num > len(file_data)):
+            print("Project number doesn't exist")
+            exit()
+        lib.alter_project_by_number(file_data, "unfinish", num)
+    else:
+        lib.list_all_tasks(file_data, 1)
+        num=int(input("Which task would you like to un-finish? "))
+        if (num < 1) or (num > lib.count_all_tasks(file_data)):
+            print("Task number doesn't exist")
+            exit()
+        lib.alter_task_by_number(file_data, "unfinish", num)
+
+    lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### test_file ##########################################
 #                                                       #
