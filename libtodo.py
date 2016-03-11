@@ -112,8 +112,9 @@ def list_all_tasks(projects, num=-1):
         if num < 0:
             print_tasks(proj.tasks, append=" ")
         else:
-            print_tasks(proj.tasks, numbering=ctr, append=" ")
-            ctr += 1
+            if len(proj.tasks) > 0:
+                print_tasks(proj.tasks, numbering=ctr, append=" ")
+                ctr += 1
         print()
 
 #### list_all_projects ##########################################
