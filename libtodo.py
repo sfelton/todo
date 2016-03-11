@@ -26,6 +26,15 @@ class Project(object):
     def add_task(self, t):
         self.tasks.append(t)
 
+    def percent_finished(self):
+        if len(self.tasks) <= 0:
+            return 0
+        done = 0
+        for t in self.tasks:
+            if t.completed:
+                done += 1
+        return (int(done/len(self.tasks) * 100))
+
 #--------[ Methods ]-----------------------------------------------------------
 #### read_todo_file #############################################
 #                                                               #
@@ -97,18 +106,15 @@ def write_tasks_to_file(projects, filename):
 #                   3) Print all contained tasks                #
 #################################################################
 def list_all_tasks(projects, num=-1):
-    if num < 0:
-        for proj in projects:
-            print(proj.name)
+    ctr = num
+    for proj in projects:
+        print("{} ({}%)".format(proj.name, proj.percent_finished()))
+        if num < 0:
             print_tasks(proj.tasks, append=" ")
-            print()
-    else:
-        ctr = num
-        for proj in projects:
-            print(proj.name)
+        else:
             print_tasks(proj.tasks, numbering=ctr, append=" ")
-            ctr += len(proj.tasks)
-            print()
+            ctr += 1
+        print()
 
 #### list_all_projects ##########################################
 #                                                               #
