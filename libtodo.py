@@ -73,7 +73,8 @@ def read_todo_file(filename):
                 project_desc=line[4:-1]
                 temp_project = Project(project_desc)
         #Push the last project onto the array
-        projects.append(temp_project)
+        if 'temp_project' in locals():
+            projects.append(temp_project)
 
     return projects
 
