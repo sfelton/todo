@@ -115,7 +115,7 @@ def list_all_tasks(projects, num=-1):
         else:
             if len(proj.tasks) > 0:
                 print_tasks(proj.tasks, numbering=ctr, append=" ")
-                ctr += 1
+                ctr += len(proj.tasks)
         print()
 
 #### list_all_projects ##########################################
@@ -231,7 +231,7 @@ def alter_project_by_number(projects, action, number, item=None, start_num=1):
         print()
         print("---- {} ----".format(curr_proj.name))
         print_tasks(curr_proj.tasks)
-        ans = input("Do you really want to delete '{}'? "\
+        ans = input("\nDo you really want to delete '{}'? "\
                 .format(curr_proj.name))
         if not (ans == "y" or ans == "yes" or ans == "Y" or ans == "Yes"):
             return 4

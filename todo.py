@@ -4,7 +4,7 @@
 import sys
 import os
 import libtodo as lib
-from libtodo import Task
+from libtodo import Task, Project
 
 #--------[ GLOBALS ]-----------------------------------------------------------
 VERSION     = "0.3"
@@ -65,8 +65,15 @@ def add_task():
     file_data = lib.read_todo_file(TODO_FILE)
     print("--------Projects--------")
     lib.list_all_projects(file_data, 1)
-    num=int(input("\nWhich group would you like to add this to? "))
-    lib.alter_project_by_number(file_data, "add_task", num, temp_task)
+    print("\n(N ) New Project")
+    num=input("\nWhich project would you like to add this to? ")
+    if num == 'N':
+        name=input("\nName of the new project? ")
+        temp_proj = Project(name)
+        temp_proj.add_task(temp_task)
+        file_data.append(temp_proj)
+    else:
+        lib.alter_project_by_number(file_data, "add_task", int(num), temp_task)
     lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### delete_task ########################################
