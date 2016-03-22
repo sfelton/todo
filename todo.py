@@ -8,6 +8,7 @@ from libtodo import Task, Project
 
 #--------[ GLOBALS ]-----------------------------------------------------------
 VERSION     = "0.3"
+CONFIG      = todo_config.ini
 FILENAME    = "todo.txt"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
 TODO_FILE   = str(TODO_DIR+"/"+FILENAME)
@@ -174,6 +175,9 @@ def test_file():
     retval = lib.check_file_structure(TODO_FILE, True)
 
 #--------[ Main ]--------------------------------------------------------------
+
+#PLACEHOLDER - Open and read config file
+
 if len(sys.argv) == 1:
     list_tasks()
     exit()
