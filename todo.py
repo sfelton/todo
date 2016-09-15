@@ -9,11 +9,9 @@ from libtodo import Task, Project
 
 #--------[ GLOBALS ]-----------------------------------------------------------
 VERSION     = "0.3"
-#CONFIG      = todo_config.ini
-CONFIG      = "testconfig.ini"
-FILENAME    = "todo.txt"
+CONFIG      = "todo_config.ini"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
-TODO_FILE   = str(TODO_DIR+"/"+FILENAME)
+#TODO_FILE   = str(TODO_DIR+"/"+FILENAME) This has been moved to config
 
 #--------[ Function ]----------------------------------------------------------
 
@@ -42,6 +40,20 @@ v | version             Print todo version
 #########################################################
 def Version():
     print("todo v{}".format(VERSION))
+
+#### read_config ########################################
+#                                                       #
+# Open and parse the configuration file given as the    #
+# argument                                              #
+#########################################################
+def read_config(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    
+    #Read Main section
+    todo_filename = config['Main']['file_name']
+    global TODO_FILE
+    TODO_FILE = str(TODO_DIR+"/"+todo_filename)
 
 #### list_tasks #########################################
 #                                                       #
@@ -178,7 +190,7 @@ def test_file():
 
 #--------[ Main ]--------------------------------------------------------------
 
-#PLACEHOLDER - Open and read config file
+read_config(TODO_DIR+"/"+CONFIG)
 
 if len(sys.argv) == 1:
     list_tasks()
