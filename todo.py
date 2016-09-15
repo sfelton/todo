@@ -3,9 +3,9 @@
 #--------[ Imports ]-----------------------------------------------------------
 import sys
 import os
-import configparser
 import libtodo as lib
 from libtodo import Task, Project
+import configparser
 
 #--------[ GLOBALS ]-----------------------------------------------------------
 VERSION     = "0.3"
@@ -40,20 +40,6 @@ v | version             Print todo version
 #########################################################
 def Version():
     print("todo v{}".format(VERSION))
-
-#### read_config ########################################
-#                                                       #
-# Open and parse the configuration file given as the    #
-# argument                                              #
-#########################################################
-def read_config(config_file):
-    config = configparser.ConfigParser()
-    config.read(config_file)
-    
-    #Read Main section
-    todo_filename = config['Main']['file_name']
-    global TODO_FILE
-    TODO_FILE = str(TODO_DIR+"/"+todo_filename)
 
 #### list_tasks #########################################
 #                                                       #
@@ -190,12 +176,20 @@ def test_file():
 
 #--------[ Main ]--------------------------------------------------------------
 
-read_config(TODO_DIR+"/"+CONFIG)
+#Parse through config file
+if not os.path.isfile(TODO_DIR+"/"+CONFIG):
+    print("[ERROR] Config file, " + CONFIG +", does not exsist")
+    exit()
+config = configparser.ConfigParser()
+config.read(TODO_DIR+"/"+CONFIG)
+TODO_FILE = str(TODO_DIR+"/"+config['Main']['file_name'])
 
+#Check for simple case of just running 'todo'
 if len(sys.argv) == 1:
     list_tasks()
     exit()
 
+#Parse arguments
 argument_parser = { "a" : add_task,
                     "d" : delete_task,
                     "f" : finish_task,
