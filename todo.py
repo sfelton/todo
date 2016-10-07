@@ -14,13 +14,6 @@ from libtodo import Task, Project
 VERSION     = "0.4"
 CONFIG      = "todo_config.ini"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
-#TODO_FILE   = str(TODO_DIR+"/"+FILENAME) This has been moved to config
-
-#STATES      = Enum('STATES', 'Project_Complete\
-#                              Project_In_Progress\
-#                              Project_Not_Started\
-#                              Task_Complete\
-#                              Task_In_Progress')
 
 #--------[ Function ]----------------------------------------------------------
 

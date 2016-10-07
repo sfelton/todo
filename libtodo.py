@@ -28,6 +28,12 @@ class Task(object):
         else:
             return "[ ] {}".format(self.description)
 
+    def print_to_file(self):
+        if self.completed:
+            return "[X] {}".format(self.description)
+        else:
+            return "[ ] {}".format(self.description)
+
 class Project(object):
 
     def __init__(self, n):
@@ -102,7 +108,7 @@ def write_tasks_to_file(projects, filename):
             f.write("PR  {}".format(p.name))
             f.write('\n')
             for t in p.tasks:
-                f.write(t.__str__())
+                f.write(t.print_to_file())
                 f.write('\n')
 
 #### list_all_tasks #############################################
