@@ -4,7 +4,6 @@
 import sys
 import os
 import configparser
-from enum import Enum
 
 import libtodo as lib
 import colors as c
@@ -190,7 +189,8 @@ config.read(TODO_DIR+"/"+CONFIG)
 TODO_FILE = str(TODO_DIR+"/"+config['Main']['file_name'])
 
 #Colors section of config file
-LIST_COLORS = lib.get_colors_from_config(config)
+if config['Main']['colorize_output'] == "True":
+    LIST_COLORS = lib.get_colors_from_config(config)
 
 #Check for simple case of just running 'todo'
 if len(sys.argv) == 1:

@@ -39,9 +39,13 @@ class Project(object):
     def __init__(self, n):
         self.tasks=[]
         self.name=n
+        self.state=STATES.project_not_started
     
     def add_task(self, t):
         self.tasks.append(t)
+
+    def set_state(self, s):
+        self.state = s
 
     def percent_finished(self):
         if len(self.tasks) <= 0:
@@ -84,13 +88,21 @@ def read_todo_file(filename):
                 temp_project.add_task(temp_task)
             elif char_key == "PR":
                 if 'temp_project' in locals():
-                  projects.append(temp_project)  
-                  del temp_project
+                    if temp_project.percent_finished() == 100:
+                        temp_project.set_state(STATES.project_complete)
+                    elif temp_project.percent_finished() > 0:
+                        temp_project.set_state(STATES.project_in_progress)
+                    projects.append(temp_project)  
+                    del temp_project
 
                 project_desc=line[4:-1]
                 temp_project = Project(project_desc)
         #Push the last project onto the array
         if 'temp_project' in locals():
+            if temp_project.percent_finished() == 100:
+                temp_project.set_state(STATES.project_complete)
+            elif temp_project.percent_finished() > 0:
+                temp_project.set_state(STATES.project_in_progress)
             projects.append(temp_project)
 
     return projects
@@ -126,7 +138,9 @@ def write_tasks_to_file(projects, filename):
 def list_all_tasks(projects, num=-1):
     ctr = num
     for proj in projects:
-        print("{} ({}%)".format(proj.name, proj.percent_finished()))
+        print(COLOR_DICT[proj.state]+\
+              "{} ({}%)".format(proj.name, proj.percent_finished())+\
+              colors.NoC)
         if num < 0:
             print_tasks(proj.tasks, append=" ")
         else:
