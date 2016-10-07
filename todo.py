@@ -1,17 +1,26 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.5
 
 #--------[ Imports ]-----------------------------------------------------------
 import sys
 import os
-import libtodo as lib
-from libtodo import Task, Project
 import configparser
+from enum import Enum
+
+import libtodo as lib
+import colors as c
+from libtodo import Task, Project
 
 #--------[ GLOBALS ]-----------------------------------------------------------
-VERSION     = "0.3"
+VERSION     = "0.4"
 CONFIG      = "todo_config.ini"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
 #TODO_FILE   = str(TODO_DIR+"/"+FILENAME) This has been moved to config
+
+#STATES      = Enum('STATES', 'Project_Complete\
+#                              Project_In_Progress\
+#                              Project_Not_Started\
+#                              Task_Complete\
+#                              Task_In_Progress')
 
 #--------[ Function ]----------------------------------------------------------
 
@@ -46,7 +55,7 @@ def Version():
 # List all tasks in todo list                           #
 #########################################################
 def list_tasks():
-    print("--------TODO List--------")
+    print(c.Bold+"--------TODO List--------"+c.NoC)
     file_data = lib.read_todo_file(TODO_FILE)
     lib.list_all_tasks(file_data)
 
@@ -177,12 +186,18 @@ def test_file():
 #--------[ Main ]--------------------------------------------------------------
 
 #Parse through config file
+#Check that config file exists and open it
 if not os.path.isfile(TODO_DIR+"/"+CONFIG):
     print("[ERROR] Config file, " + CONFIG +", does not exsist")
     exit()
 config = configparser.ConfigParser()
 config.read(TODO_DIR+"/"+CONFIG)
+
+#Main section of config file
 TODO_FILE = str(TODO_DIR+"/"+config['Main']['file_name'])
+
+#Colors section of config file
+LIST_COLORS = lib.get_colors_from_config(config)
 
 #Check for simple case of just running 'todo'
 if len(sys.argv) == 1:

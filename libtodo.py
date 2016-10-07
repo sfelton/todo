@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
 
+#--------[ Imports ]-----------------------------------------------------------
 from os.path import isfile
 from os.path import getsize
 from sys import stderr
+from enum import Enum
+import colors
+
+#--------[ Globals ]-----------------------------------------------------------
+STATES      = Enum('STATES', 'project_complete\
+                              project_in_progress\
+                              project_not_started\
+                              task_complete\
+                              task_in_progress')
+COLOR_DICT = dict.fromkeys(STATES, colors.NoC)
 
 #--------[ Classes ]-----------------------------------------------------------
 class Task(object):
@@ -13,7 +24,7 @@ class Task(object):
 
     def __str__(self):
         if self.completed:
-            return "[X] {}".format(self.description)
+            return COLOR_DICT[STATES.task_complete]+"[X] {}".format(self.description)+colors.NoC
         else:
             return "[ ] {}".format(self.description)
 
@@ -51,7 +62,7 @@ def read_todo_file(filename):
     # Check the structure of the file before reading it
     ret = check_file_structure(filename)
     if ret != 0:
-        print("ERROR: todo file is not structured properly", file=stderr)
+        print("[ERROR] todo file is not structured properly", file=stderr)
         print("       run 'todo test' to help resolve issues", file =stderr)
         exit(2)
 
@@ -197,7 +208,7 @@ def alter_task_by_number(projects, action, number, start_num=1):
                 local_ctr += 1
                 ctr += 1       
     # Shouldn't make it here but just in case
-    print("ERROR: task cannot be found in alter_task_by_number", file=stderr)
+    print("[ERROR] task cannot be found in alter_task_by_number", file=stderr)
     return 3
 
 #### alter_project_by_number ####################################
@@ -339,6 +350,26 @@ def check_file_structure(filename, verbose=False):
     if verbose: print("\nFile structure check complete. PASS")
     return 0;
 
+#### get_colors_from_config #####################################
+#                                                               #
+# input : config - A configuration already opend by             #
+#                   ConfigParser                                #
+#                                                               #
+# output: Return a dictionary with the values as the colors and #
+#         the keys are the state in which that color should be  #
+#         printed.                                              #
+#                                                               #
+#################################################################
+def get_colors_from_config(config):
+    #Iterate through Colors section of config at set colors if neccessary
+    color_sec = config['Colors']
+    for config_state in color_sec:
+        for state in STATES:
+            if state.name == config_state:
+                COLOR_DICT[state] = determine_color(color_sec[config_state])
+                break
+    return COLOR_DICT
+
 #--------[ Helper Methods ]----------------------------------------------------
 #### count_all_tasks ############################################
 #                                                               #
@@ -354,7 +385,40 @@ def count_all_tasks(projects):
         num_tasks += len(proj.tasks)
     return num_tasks
 
+#### determine_color ############################################
+#                                                               #
+# input : color_str - A string coming from a config file that   #
+#                     containst the color text this method will #
+#                     determine                                 #
+#                                                               #
+# output: Return the escape sequece as defined described by     #
+#         colors.py to get the desired formated text            #
+#                                                               #
+#################################################################
+def determine_color(color_str):
+    return_str = ""
+    if color_str == "None":
+        return_str = colors.NoC
+    elif color_str == "Black":
+        return_str = colors.Black
+    elif color_str == "Red":
+        return_str = colors.Red
+    elif color_str == "Green":
+        return_str = colors.Green
+    elif color_str == "Yellow":
+        return_str = colors.Yellow
+    elif color_str == "Blue":
+        return_str = colors.Blue
+    elif color_str == "Purple":
+        return_str = colors.Purple
+    elif color_str == "Cyan":
+        return_str = colors.Cyan
+    elif color_str == "White":
+        return_str = colors.White
+    else:
+        print(colors.Red+"[Error] "+colors.NoC+"Format not found")
 
+    return return_str
 
 
 
