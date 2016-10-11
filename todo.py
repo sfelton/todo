@@ -165,6 +165,19 @@ def unfinish_task():
 
     lib.write_tasks_to_file(file_data, TODO_FILE)
 
+#### sort_tasks #########################################
+#                                                       #
+# Sort the tasks in the todo file to be more readable   #
+#                                                       #
+# As of right now this will only sort by moving all of  #
+# the finished tasksto the bottom of the project.       #
+#########################################################
+def sort_tasks():
+    print("I should probably be sorting tasks")
+    file_data = lib.read_todo_file(TODO_FILE)
+    for proj in file_data:
+        lib.sort_tasks_in_project(proj)
+
 #### test_file ##########################################
 #                                                       #
 # Test the todo file structure                          #
@@ -203,6 +216,7 @@ argument_parser = { "a" : add_task,
                     "f" : finish_task,
                     "h" : Usage,
                     "l" : list_tasks,
+                    "s" : sort_tasks,
                     "u" : unfinish_task,
                     "v" : Version,
 
@@ -212,6 +226,7 @@ argument_parser = { "a" : add_task,
                     "finish": finish_task,
                     "help"  : Usage,
                     "list"  : list_tasks,
+                    "sort"  : sort_tasks,
                     "test"  : test_file,
                     "version": Version }
 

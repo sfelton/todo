@@ -123,6 +123,14 @@ def write_tasks_to_file(projects, filename):
                 f.write(t.print_to_file())
                 f.write('\n')
 
+#### sort_tasks_in_project  #####################################
+#                                                               #
+# input : proj - Project to be sorted                           #
+#                                                               #
+#################################################################
+def sort_tasks_in_project(proj):
+    print(proj.name)
+
 #### list_all_tasks #############################################
 #                                                               #
 # input : projects - Array of projects to be printed            #
