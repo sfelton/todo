@@ -31,6 +31,7 @@ a | add     <task>      Add a task to todo list
 f | finish  <task ID>   Finish a task
 h | help                Print help
 l | list                List tasks
+s | sort                Sort finished taks to bottom
   | test                Tesk todo file structure
 v | version             Print todo version
 ''')
@@ -177,6 +178,10 @@ def sort_tasks():
     file_data = lib.read_todo_file(TODO_FILE)
     for proj in file_data:
         lib.sort_tasks_in_project(proj)
+
+    lib.list_all_tasks(file_data)
+
+    lib.write_tasks_to_file(file_data, TODO_FILE)
 
 #### test_file ##########################################
 #                                                       #

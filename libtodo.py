@@ -127,9 +127,24 @@ def write_tasks_to_file(projects, filename):
 #                                                               #
 # input : proj - Project to be sorted                           #
 #                                                               #
+# output: Sort the project so that all finished tasks appear at #
+#         at the bottom of the list. There is no return value   #
+#                                                               #
 #################################################################
 def sort_tasks_in_project(proj):
-    print(proj.name)
+    if proj.percent_finished() != 0 and proj.percent_finished() != 100:
+        completed_tasks = []
+
+        index = 0
+        for i in range(0, len(proj.tasks)):
+            if proj.tasks[index].completed:
+                completed_tasks.append(proj.tasks.pop(index))
+            else:
+                index += 1
+
+        for t in completed_tasks:
+            proj.tasks.append(t)
+
 
 #### list_all_tasks #############################################
 #                                                               #
