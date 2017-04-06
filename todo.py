@@ -6,6 +6,7 @@ import os
 import configparser
 
 import libtodo as lib
+import utilities as util
 import colors as c
 from libtodo import Task, Project
 
@@ -191,7 +192,7 @@ def sort_tasks():
 # it can be read and manipulated by this program.       #
 #########################################################
 def test_file():
-    retval = lib.check_file_structure(TODO_FILE, True)
+    retval = util.check_file_structure(TODO_FILE, True)
 
 #--------[ Main ]--------------------------------------------------------------
 
