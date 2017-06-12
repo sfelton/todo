@@ -4,6 +4,7 @@
 import sys
 import os
 import configparser
+import getpass
 
 import libtodo as lib
 import utilities as util
@@ -21,34 +22,40 @@ TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
 #                                                       #
 # Print usage statement                                 #
 #########################################################
-def Usage():
+def Usage(args):
     print('''
 todo - A simple todo list manager to keep a readable todo.txt file
 
 usage: todo [action] [argument]
 
-actions:
+Actions:
 a | add     <task>      Add a task to todo list
 f | finish  <task ID>   Finish a task
 h | help                Print help
 l | list                List tasks
 s | sort                Sort finished taks to bottom
-  | test                Tesk todo file structure
+  | util    <utility>   Run a TODO Utility
 v | version             Print todo version
+
+Utilities:
+    test                Tesk todo config and file structure 
+    encrypt             Encrypt todo file
+    decrypt             Decrypt todo file
+
 ''')
 
 #### Version ############################################
 #                                                       #
 # Print the version number                              #
 #########################################################
-def Version():
+def Version(args):
     print("todo v{}".format(VERSION))
 
 #### list_tasks #########################################
 #                                                       #
 # List all tasks in todo list                           #
 #########################################################
-def list_tasks():
+def list_tasks(args):
     print(c.Bold+"--------TODO List--------"+c.NoC)
     file_data = lib.read_todo_file(TODO_FILE)
     lib.list_all_tasks(file_data)
@@ -60,7 +67,7 @@ def list_tasks():
 # Check if there is a task in argv[2]. If so, make that #
 # that the description. If not, prompt for one.         #
 #########################################################
-def add_task():
+def add_task(args):
     if len(sys.argv) == 3:
         desc = sys.argv[2]
     else:
@@ -87,7 +94,7 @@ def add_task():
 # Print a numbered list of the all tasks and ask which  #
 # one to delete. Then delete that task if it exists     #
 #########################################################
-def delete_task():
+def delete_task(args):
     file_data = lib.read_todo_file(TODO_FILE)
     if (len(sys.argv) > 2) and \
        (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
@@ -117,7 +124,7 @@ def delete_task():
 # task is already complete, no error or warning is      #
 # printed.                                              #
 #########################################################
-def finish_task():
+def finish_task(args):
     file_data = lib.read_todo_file(TODO_FILE)
     if (len(sys.argv) > 2) and \
        (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
@@ -146,7 +153,7 @@ def finish_task():
 # choose which one to "unfinish". If the task is marked #
 # as not complete, no error or warning is printed.      #
 #########################################################
-def unfinish_task():
+def unfinish_task(args):
     file_data = lib.read_todo_file(TODO_FILE)
     if (len(sys.argv) > 2) and \
        (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
@@ -174,7 +181,7 @@ def unfinish_task():
 # As of right now this will only sort by moving all of  #
 # the finished tasksto the bottom of the project.       #
 #########################################################
-def sort_tasks():
+def sort_tasks(args):
     print("I should probably be sorting tasks")
     file_data = lib.read_todo_file(TODO_FILE)
     for proj in file_data:
@@ -184,15 +191,60 @@ def sort_tasks():
 
     lib.write_tasks_to_file(file_data, TODO_FILE)
 
-#### test_file ##########################################
+#### utilities ##########################################
 #                                                       #
-# Test the todo file structure                          #
+# Run a TODO Utility, usually found in utilties.py      #
 #                                                       #
-# Run the todo file through a series of tests to see if #
-# it can be read and manipulated by this program.       #
+# Valid Utilities:                                      #
+#  * test     -> test config and todo file structure    #
+#  * encrypt  -> encrypt todo file                      #
+#  * decrypt  -> decrypt todo file                      #
 #########################################################
-def test_file():
-    retval = util.check_file_structure(TODO_FILE, True)
+def utilities(args):
+    if len(args) == 0:
+        print('''
+Utility Usage: todo util <utility>
+
+Utilities:
+    test                Tesk todo config and file structure 
+    encrypt             Encrypt todo file
+    decrypt             Decrypt todo file
+
+''')
+        return -2
+
+    retval=0
+    if args[0] == "test":
+        retval = util.check_file_structure(TODO_FILE, True)
+
+    elif args[0] == "encrypt":
+        print("Encrypt")
+        
+        password = getpass.getpass("Password: ")
+        print(password)
+
+        retval = util.encrypt_file(TODO_FILE, TODO_FILE, password)
+
+    elif args[0] == "decrypt":
+        print("Decrypt")
+        password = getpass.getpass("Password: ")
+        print(password)
+
+        retval = util.decrypt_file(TODO_FILE, TODO_FILE, password)
+    else:
+        Usage(args)
+
+
+#### testtesttest #######################################
+#                                                       #
+# Test method to test anything we need to               #
+#                                                       #
+#########################################################
+def testtesttest(args):
+    print("====TEST METHOD====")
+    util.encrypt_file(TODO_FILE, TODO_FILE+".enc", aes_passphrase)
+    util.decrypt_file(TODO_FILE+".enc",TODO_FILE+".dec", aes_passphrase)
+
 
 #--------[ Main ]--------------------------------------------------------------
 
@@ -205,15 +257,24 @@ config = configparser.ConfigParser()
 config.read(TODO_DIR+"/"+CONFIG)
 
 #Main section of config file
-TODO_FILE = str(TODO_DIR+"/"+config['Main']['file_name'])
+TODO_FILE   = str(TODO_DIR+"/"+config['Main']['file_name'])
+ENCRYPTED   = config['Main']['encryption']
+COLORED     = config['Main']['colorize_output']
+
+#Encryption section of the config file
+if ENCRYPTED:
+    if config['Encryption']['store_password']:
+        aes_passphrase = config['Encryption']['password']
+    else:
+        aes_passphrase = None
 
 #Colors section of config file
-if config['Main']['colorize_output'] == "True":
+if COLORED:
     LIST_COLORS = lib.get_colors_from_config(config)
 
 #Check for simple case of just running 'todo'
 if len(sys.argv) == 1:
-    list_tasks()
+    list_tasks(sys.argv)
     exit()
 
 #Parse arguments
@@ -225,6 +286,7 @@ argument_parser = { "a" : add_task,
                     "s" : sort_tasks,
                     "u" : unfinish_task,
                     "v" : Version,
+                    "t" : testtesttest,
 
                     #Long actions
                     "add"   : add_task,
@@ -233,9 +295,10 @@ argument_parser = { "a" : add_task,
                     "help"  : Usage,
                     "list"  : list_tasks,
                     "sort"  : sort_tasks,
-                    "test"  : test_file,
+                    "test"  : testtesttest,
+                    "util"  : utilities,
                     "version": Version }
 
 #Check the first argument and default to Usage()
-argument_parser.get(sys.argv[1], Usage)()
+argument_parser.get(sys.argv[1], Usage)(sys.argv[2:])
 

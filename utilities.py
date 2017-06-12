@@ -3,6 +3,14 @@
 #--------[ Imports ]-----------------------------------------------------------
 from os.path import isfile
 from os.path import getsize
+from os import remove
+from shutil import copy
+import struct
+
+import base64
+import hashlib
+from Crypto import Random
+from Crypto.Cipher import AES
 
 #--------[ Methods ]-----------------------------------------------------------
 
@@ -81,4 +89,169 @@ def check_file_structure(filename, verbose=False):
 
     if verbose: print("\nFile structure check complete. PASS")
     return 0;
+
+#### encrypt_file ###############################################
+#                                                               #
+# input:  file to be encrypted                                  #
+#         file to wirte to                                      #
+#         passphrase used to generate the encrytion key         #
+#         //iv used in AES CBC cipher                           #
+# output: 0 if file passes, else the step it failed on          #
+#                                                               #
+# Encrypt a static file with given key and iv. Should be used   #
+# as an initial encryption of the file. This method does not    #
+# an IV as it will generate one and store it at the start of    #
+# the output file.                                              #
+#                                                               #
+#################################################################
+def encrypt_file(filename_in, filename_out, passphrase):
+    """
+    print("[+] Running encrypt_file with arguments:")
+    print("     filename_in : " + filename_in)
+    print("     filename_out: " + filename_out)
+    print("     passphare   : " + passphrase)
+    print("")
+    """
+
+    #Check if file in and file out are the same file
+    if filename_in == filename_out:
+        SAME_FILENAME = True
+        filename_out = filename_out+".tmp"
+    else:
+        SAME_FILENAME = False
+
+    # Initial Setup
+    iv = Random.new().read(AES.block_size)
+    filesize = getsize(filename_in)
+
+    if not filename_out:
+        filename_out = filename_in + '.enc'
+    cipher = AES.new ( hashlib.md5(passphrase.encode('utf-8')).digest(),
+                       AES.MODE_CBC,
+                       iv )
+
+    # Produce MD5 hash of file
+    file_hash=hashlib.md5()
+    with open(filename_in, 'rb') as infile:
+        while True:
+            chunk = infile.read(AES.block_size)
+            file_hash.update(chunk)
+            if len(chunk) == 0:
+                break
+
+    # Open files to encrypt and write file
+    with open(filename_in, 'rb') as infile:
+        with open(filename_out, 'wb') as outfile:
+            outfile.write(file_hash.digest())
+            outfile.write(struct.pack('<Q', filesize))
+            outfile.write(iv)
+
+            while True:
+                chunk = infile.read(AES.block_size)
+                if len(chunk) == 0:
+                    break
+                outfile.write(cipher.encrypt(_pad(chunk)))
+    
+    if SAME_FILENAME:
+        copy(filename_out, filename_in)
+        remove(filename_out)
+
+
+    return 0;
+
+#### decrypt_file ###############################################
+#                                                               #
+# input:  file to be decrypted                                  #
+#         file to wirte to                                      #
+#         passphrase used to generate the encryption key        #
+#         //iv used in AES CBC cipher                           #
+# output: 0 if file passes, else the step it failed on          #
+#                                                               #
+# Decrypt a static file with given key and iv. Should be used   #
+# as a final decryption of the file.                            #
+#                                                               #
+#################################################################
+def decrypt_file(filename_in, filename_out, passphrase):
+    """
+    print("[+] Running decrypt_file with arguments:")
+    print("     filename_in : " + filename_in)
+    print("     filename_out: " + filename_out)
+    print("     passphare   : " + passphrase)
+    print("")
+    """
+
+    #Check if file in and file out are the same file
+    if filename_in == filename_out:
+        SAME_FILENAME = True
+        filename_out = filename_out+".tmp"
+    else:
+        SAME_FILENAME = False
+
+    # Initial Setup
+    if not filename_out:
+        filename_out = filename_in + '.dec'
+
+    with open(filename_in, 'rb') as infile:
+        file_hash = infile.read(AES.block_size)
+        original_size=struct.unpack('<Q',infile.read(struct.calcsize('Q')))[0]
+        iv = infile.read(AES.block_size)
+        cipher = AES.new ( hashlib.md5(passphrase.encode('utf-8')).digest(),
+                           AES.MODE_CBC,
+                           iv )
+
+        # Decrypt File
+        temp_hash = hashlib.md5()
+        with open(filename_out, 'wb') as outfile:
+            while True:
+                chunk = infile.read(AES.block_size)
+                if len(chunk) == 0:
+                    break
+                decrypted_chunk = _unpad(cipher.decrypt(chunk))
+                temp_hash.update(decrypted_chunk)
+                outfile.write(decrypted_chunk)
+#            outfile.truncate(original_size)
+
+        # Check hash
+        if file_hash != temp_hash.digest():
+            remove(filename_out)
+            print("[ERRR] Decryption key is not valid")
+            return -1
+
+    if SAME_FILENAME:
+        copy(filename_out, filename_in)
+        remove(filename_out)
+
+    return 0;
+
+
+#--------[ Helpers ]-----------------------------------------------------------
+
+"""
+BS = 16
+pad = lambda s: s + ((BS - len(s)) % BS) * chr((BS - len(s)) % BS).encode('utf-8')
+unpad = lambda s : s[:-ord(s[len(s)-1:])]
+#unpad = lambda s : s[0:-ord(s[-1])]
+"""
+
+def str_to_bytes(data):
+        u_type = type(b''.decode('utf8'))
+        if isinstance(data, u_type):
+            return data.encode('utf8')
+        return data
+
+def _pad(s):
+    BS = 16
+    bs = 16
+    return s + ((bs - len(s)) % bs) * str_to_bytes(chr((bs - len(s)) % bs))
+#    return s + ((BS - len(s)) % BS) * chr((BS - len(s)) % BS).encode('utf-8')
+
+def _unpad(s):
+    if ord(s[len(s)-1:]) >= 16:
+        return s
+
+    elif s[len(s)-ord(s[len(s)-1:]):len(s)] != s[len(s)-1:]*ord(s[len(s)-1:]):
+        return s
+
+    else:
+        return s[:-ord(s[len(s)-1:])]
 

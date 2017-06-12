@@ -63,6 +63,7 @@ class Project(object):
 #### read_todo_file #############################################
 #                                                               #
 # input : filename (string)                                     #
+#         encrypted (bool)
 # output: array of projects, each projects contains array       #
 #         of tasks                                              #
 #                                                               #
@@ -71,7 +72,7 @@ class Project(object):
 # placed in the project until another project is encountered.   #
 # Push all projects into an array and return that array.        #
 #################################################################
-def read_todo_file(filename):
+def read_todo_file(filename, encrypted = False):
     # Check the structure of the file before reading it
     ret = util.check_file_structure(filename)
     if ret != 0:
@@ -110,7 +111,7 @@ def read_todo_file(filename):
 
     return projects
 
-#### write_todo_file ############################################
+#### write_tasks_to_file ########################################
 #                                                               #
 # input : projects - array of projects                          #
 #         filename - path to todo file                          #
