@@ -57,7 +57,7 @@ def Version(args):
 #########################################################
 def list_tasks(args):
     print(c.Bold+"--------TODO List--------"+c.NoC)
-    file_data = lib.read_todo_file(TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
     lib.list_all_tasks(file_data)
 
 #### add_task ###########################################
@@ -68,12 +68,13 @@ def list_tasks(args):
 # that the description. If not, prompt for one.         #
 #########################################################
 def add_task(args):
+    file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
+
     if len(sys.argv) == 3:
         desc = sys.argv[2]
     else:
         desc=input("Task description: ")
     temp_task = Task(desc)
-    file_data = lib.read_todo_file(TODO_FILE)
     print("--------Projects--------")
     lib.list_all_projects(file_data, 1)
     print("\n(N ) New Project")
@@ -85,7 +86,9 @@ def add_task(args):
         file_data.append(temp_proj)
     else:
         lib.alter_project_by_number(file_data, "add_task", int(num), temp_task)
-    lib.write_tasks_to_file(file_data, TODO_FILE)
+
+
+    lib.write_tasks_to_file(file_data, TODO_FILE, ENCRYPTED, aes_passphrase)
 
 #### delete_task ########################################
 #                                                       #
@@ -95,7 +98,7 @@ def add_task(args):
 # one to delete. Then delete that task if it exists     #
 #########################################################
 def delete_task(args):
-    file_data = lib.read_todo_file(TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
     if (len(sys.argv) > 2) and \
        (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
         print("--------Projects--------")
@@ -113,7 +116,7 @@ def delete_task(args):
             exit()
         lib.alter_task_by_number(file_data, "delete", num)
 
-    lib.write_tasks_to_file(file_data, TODO_FILE)
+    lib.write_tasks_to_file(file_data, TODO_FILE, ENCRYPTED, aes_passphrase)
 
 #### finish_task ########################################
 #                                                       #
@@ -125,7 +128,7 @@ def delete_task(args):
 # printed.                                              #
 #########################################################
 def finish_task(args):
-    file_data = lib.read_todo_file(TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
     if (len(sys.argv) > 2) and \
        (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
         print("--------Projects--------")
@@ -143,7 +146,7 @@ def finish_task(args):
             exit()
         lib.alter_task_by_number(file_data, "finish", num)
 
-    lib.write_tasks_to_file(file_data, TODO_FILE)
+    lib.write_tasks_to_file(file_data, TODO_FILE, ENCRYPTED, aes_passphrase)
 
 #### unfinish_task ######################################
 #                                                       #
@@ -154,7 +157,7 @@ def finish_task(args):
 # as not complete, no error or warning is printed.      #
 #########################################################
 def unfinish_task(args):
-    file_data = lib.read_todo_file(TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
     if (len(sys.argv) > 2) and \
        (sys.argv[2] == "--project" or sys.argv[2] == "-p"):
         print("--------Projects--------")
@@ -172,7 +175,7 @@ def unfinish_task(args):
             exit()
         lib.alter_task_by_number(file_data, "unfinish", num)
 
-    lib.write_tasks_to_file(file_data, TODO_FILE)
+    lib.write_tasks_to_file(file_data, TODO_FILE, ENCRYPTED, aes_passphrase)
 
 #### sort_tasks #########################################
 #                                                       #
@@ -183,13 +186,13 @@ def unfinish_task(args):
 #########################################################
 def sort_tasks(args):
     print("I should probably be sorting tasks")
-    file_data = lib.read_todo_file(TODO_FILE)
+    file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
     for proj in file_data:
         lib.sort_tasks_in_project(proj)
 
     lib.list_all_tasks(file_data)
 
-    lib.write_tasks_to_file(file_data, TODO_FILE)
+    lib.write_tasks_to_file(file_data, TODO_FILE, ENCRYPTED, aes_passphrase)
 
 #### utilities ##########################################
 #                                                       #
@@ -215,20 +218,20 @@ Utilities:
 
     retval=0
     if args[0] == "test":
-        retval = util.check_file_structure(TODO_FILE, True)
+        if not ENCRYPTED:
+            retval = util.check_file_structure(TODO_FILE, True)
+        else:
+            print("[ERRR] This can only be done with decrypted TODO files")
+            print("       Please decrypt with `todo util decrypt` first")
 
     elif args[0] == "encrypt":
-        print("Encrypt")
-        
         password = getpass.getpass("Password: ")
-        print(password)
-
+        print("Encrypting %s..." % TODO_FILE)
         retval = util.encrypt_file(TODO_FILE, TODO_FILE, password)
 
     elif args[0] == "decrypt":
-        print("Decrypt")
         password = getpass.getpass("Password: ")
-        print(password)
+        print("Decrypting %s..." % TODO_FILE)
 
         retval = util.decrypt_file(TODO_FILE, TODO_FILE, password)
     else:
@@ -258,15 +261,16 @@ config.read(TODO_DIR+"/"+CONFIG)
 
 #Main section of config file
 TODO_FILE   = str(TODO_DIR+"/"+config['Main']['file_name'])
-ENCRYPTED   = config['Main']['encryption']
-COLORED     = config['Main']['colorize_output']
+ENCRYPTED   = lib.str_to_bool(config['Main']['encryption'])
+COLORED     = lib.str_to_bool(config['Main']['colorize_output'])
 
 #Encryption section of the config file
+aes_passphrase = ""
 if ENCRYPTED:
-    if config['Encryption']['store_password']:
+    if lib.str_to_bool(config['Encryption']['store_password']):
         aes_passphrase = config['Encryption']['password']
     else:
-        aes_passphrase = None
+        aes_passphrase = getpass.getpass("Encryption Password: ")
 
 #Colors section of config file
 if COLORED:

@@ -4,8 +4,10 @@
 from os.path import isfile
 from os.path import getsize
 from os import remove
+from io import StringIO
 from shutil import copy
 import struct
+from io import StringIO
 
 import base64
 import hashlib
@@ -122,7 +124,6 @@ def encrypt_file(filename_in, filename_out, passphrase):
 
     # Initial Setup
     iv = Random.new().read(AES.block_size)
-    filesize = getsize(filename_in)
 
     if not filename_out:
         filename_out = filename_in + '.enc'
@@ -143,7 +144,7 @@ def encrypt_file(filename_in, filename_out, passphrase):
     with open(filename_in, 'rb') as infile:
         with open(filename_out, 'wb') as outfile:
             outfile.write(file_hash.digest())
-            outfile.write(struct.pack('<Q', filesize))
+#            outfile.write(struct.pack('<Q', filesize))
             outfile.write(iv)
 
             while True:
@@ -193,7 +194,7 @@ def decrypt_file(filename_in, filename_out, passphrase):
 
     with open(filename_in, 'rb') as infile:
         file_hash = infile.read(AES.block_size)
-        original_size=struct.unpack('<Q',infile.read(struct.calcsize('Q')))[0]
+#        original_size=struct.unpack('<Q',infile.read(struct.calcsize('Q')))[0]
         iv = infile.read(AES.block_size)
         cipher = AES.new ( hashlib.md5(passphrase.encode('utf-8')).digest(),
                            AES.MODE_CBC,
@@ -223,6 +224,93 @@ def decrypt_file(filename_in, filename_out, passphrase):
 
     return 0;
 
+#### encrypt_file_from_string ###################################
+#                                                               #
+# input:  filename to write encrypted file to                   #
+#         passphrase used to generate the encryption key        #
+#         string to be encrypted and written                    #
+# output:                                                       #
+#                                                               #
+# Take a string a write it to an encrypted file                 #
+#################################################################
+def encrypt_file_from_string(filename, passphrase, plaintext):
+    """
+    print("[+] Running encrypt_file_from_string  with arguments:")
+    print("     filename     : " + filename)
+    print("     passphrase   : " + passphrase)
+    print("")
+    """
+
+    # Initial Setup
+    iv = Random.new().read(AES.block_size)
+
+    cipher = AES.new ( hashlib.md5(passphrase.encode('utf-8')).digest(),
+                       AES.MODE_CBC,
+                       iv )
+
+    # Produce MD5 hash of file
+    file_hash=hashlib.md5()
+    file_hash.update(plaintext.encode('utf-8'))
+
+    # Open files to encrypt and write file
+    pt = StringIO(plaintext)
+    with open(filename, 'wb') as outfile:
+        outfile.write(file_hash.digest())
+        outfile.write(iv)
+
+        while True:
+            chunk = pt.read(AES.block_size)
+            if len(chunk) == 0:
+                break
+            outfile.write(cipher.encrypt(_pad(chunk.encode('utf-8'))))
+    pt.close()
+    
+
+    return 0
+
+#### decrypt_file_to_string #####################################
+#                                                               #
+# input:  file to be decrypted                                  #
+#         passphrase used to generate the encryption key        #
+# output: string containing the entire decrypted file           #
+#                                                               #
+# Decrypt a static file with given key. Used to decrypt a file  #
+# before being proccessed by other methods                      #
+#################################################################
+def decrypt_file_to_string(filename_in, passphrase):
+    """
+    print("[+] Running decrypt_file_to_string with arguments:")
+    print("     filename_in : " + filename_in)
+    print("     passphare   : " + passphrase)
+    print("")
+    """
+
+    # Initial Setup
+    with open(filename_in, 'rb') as infile:
+        file_hash = infile.read(AES.block_size)
+        iv = infile.read(AES.block_size)
+        cipher = AES.new ( hashlib.md5(passphrase.encode('utf-8')).digest(),
+                           AES.MODE_CBC,
+                           iv )
+
+        # Decrypt File
+        temp_hash = hashlib.md5()
+        string_out = b""
+        while True:
+            chunk = infile.read(AES.block_size)
+            if len(chunk) == 0:
+                break
+            decrypted_chunk = _unpad(cipher.decrypt(chunk))
+            temp_hash.update(decrypted_chunk)
+            string_out+=decrypted_chunk
+
+        # Check hash
+        if file_hash != temp_hash.digest():
+            print("[ERRR] Decryption key is not valid")
+            exit(2)
+
+    return string_out.decode("utf-8");
+
 
 #--------[ Helpers ]-----------------------------------------------------------
 
@@ -240,7 +328,6 @@ def str_to_bytes(data):
         return data
 
 def _pad(s):
-    BS = 16
     bs = 16
     return s + ((bs - len(s)) % bs) * str_to_bytes(chr((bs - len(s)) % bs))
 #    return s + ((BS - len(s)) % BS) * chr((BS - len(s)) % BS).encode('utf-8')

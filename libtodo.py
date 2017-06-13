@@ -3,12 +3,12 @@
 #--------[ Imports ]-----------------------------------------------------------
 from os.path import isfile
 from os.path import getsize
+from io import StringIO
 from sys import stderr
 from enum import Enum
 
 import colors
 import utilities as util
-
 
 #--------[ Globals ]-----------------------------------------------------------
 STATES      = Enum('STATES', 'project_complete\
@@ -63,7 +63,7 @@ class Project(object):
 #### read_todo_file #############################################
 #                                                               #
 # input : filename (string)                                     #
-#         encrypted (bool)
+#         encrypted (bool)                                      #
 # output: array of projects, each projects contains array       #
 #         of tasks                                              #
 #                                                               #
@@ -72,42 +72,52 @@ class Project(object):
 # placed in the project until another project is encountered.   #
 # Push all projects into an array and return that array.        #
 #################################################################
-def read_todo_file(filename, encrypted = False):
+def read_todo_file(filename, encrypted = False, passphrase = ""):
+    # If file is encrypted, decrypt it first
+    if encrypted:
+        decrypted_string = util.decrypt_file_to_string(filename, passphrase)
+
     # Check the structure of the file before reading it
-    ret = util.check_file_structure(filename)
-    if ret != 0:
-        print("[ERROR] todo file is not structured properly", file=stderr)
-        print("       run 'todo test' to help resolve issues", file =stderr)
-        exit(2)
+    # Only decrypted files can be checked with check_file_structure
+    if not encrypted:
+        ret = util.check_file_structure(filename)
+        if ret != 0:
+            print("[ERROR] todo file is not structured properly", file=stderr)
+            print("       run 'todo test' to help resolve issues", file =stderr)
+            exit(2)
 
+    if encrypted:
+        f = StringIO(decrypted_string)
+    else:
+        f = open(filename, encoding='utf-8')
     projects = []
-    with open(filename, encoding='utf-8') as f:
-        for line in f:
-            #The first characters of line will tell what it is
-            char_key = line[0:2]
-            if char_key[0]  == '[':
-                temp_task = Task("Placeholder Description")
-                temp_task.completed = True if line[1] == 'X' else False
-                temp_task.description=line[4:-1]
-                temp_project.add_task(temp_task)
-            elif char_key == "PR":
-                if 'temp_project' in locals():
-                    if temp_project.percent_finished() == 100:
-                        temp_project.set_state(STATES.project_complete)
-                    elif temp_project.percent_finished() > 0:
-                        temp_project.set_state(STATES.project_in_progress)
-                    projects.append(temp_project)  
-                    del temp_project
+    for line in f:
+        #The first characters of line will tell what it is
+        char_key = line[0:2]
+        if char_key[0]  == '[':
+            temp_task = Task("Placeholder Description")
+            temp_task.completed = True if line[1] == 'X' else False
+            temp_task.description=line[4:-1]
+            temp_project.add_task(temp_task)
+        elif char_key == "PR":
+            if 'temp_project' in locals():
+                if temp_project.percent_finished() == 100:
+                    temp_project.set_state(STATES.project_complete)
+                elif temp_project.percent_finished() > 0:
+                    temp_project.set_state(STATES.project_in_progress)
+                projects.append(temp_project)  
+                del temp_project
 
-                project_desc=line[4:-1]
-                temp_project = Project(project_desc)
-        #Push the last project onto the array
-        if 'temp_project' in locals():
-            if temp_project.percent_finished() == 100:
-                temp_project.set_state(STATES.project_complete)
-            elif temp_project.percent_finished() > 0:
-                temp_project.set_state(STATES.project_in_progress)
-            projects.append(temp_project)
+            project_desc=line[4:-1]
+            temp_project = Project(project_desc)
+    #Push the last project onto the array
+    if 'temp_project' in locals():
+        if temp_project.percent_finished() == 100:
+            temp_project.set_state(STATES.project_complete)
+        elif temp_project.percent_finished() > 0:
+            temp_project.set_state(STATES.project_in_progress)
+        projects.append(temp_project)
+    f.close()
 
     return projects
 
@@ -115,17 +125,30 @@ def read_todo_file(filename, encrypted = False):
 #                                                               #
 # input : projects - array of projects                          #
 #         filename - path to todo file                          #
+#         encryted - should the file be encrypted               #
+#         passphrase-encryption passphrase                      #
 # output: Writes todo file at the path specified                #
 #                                                               #
 #################################################################
-def write_tasks_to_file(projects, filename):
-    with open(filename, mode="w", encoding='utf-8') as f:
-        for p in projects:
-            f.write("PR  {}".format(p.name))
+def write_tasks_to_file(projects, filename, encrypted = False, passphrase = ""):
+#    with open(filename, mode="w", encoding='utf-8') as f:
+    if encrypted:
+        f = StringIO()
+    else:
+        f = open(filename,mode="w", encoding='utf-8')
+
+    for p in projects:
+        f.write("PR  {}".format(p.name))
+        f.write('\n')
+        for t in p.tasks:
+            f.write(t.print_to_file())
             f.write('\n')
-            for t in p.tasks:
-                f.write(t.print_to_file())
-                f.write('\n')
+
+    if encrypted:
+        util.encrypt_file_from_string(filename, passphrase, f.getvalue())
+
+    f.close()
+        
 
 #### sort_tasks_in_project  #####################################
 #                                                               #
@@ -148,7 +171,6 @@ def sort_tasks_in_project(proj):
 
         for t in completed_tasks:
             proj.tasks.append(t)
-
 
 #### list_all_tasks #############################################
 #                                                               #
@@ -341,6 +363,7 @@ def get_colors_from_config(config):
                 break
     return COLOR_DICT
 
+
 #--------[ Helper Methods ]----------------------------------------------------
 #### count_all_tasks ############################################
 #                                                               #
@@ -391,7 +414,16 @@ def determine_color(color_str):
 
     return return_str
 
-
+#### str_to_bool ################################################
+#                                                               #
+# input : string - string to convert into a boolean value       #
+#                                                               #
+# output: Return True is string is equal to "True", return      #
+#         False in all other cases                              #
+#                                                               #
+#################################################################
+def str_to_bool(string):
+    return string == 'True'
 
 
 
