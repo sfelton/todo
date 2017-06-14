@@ -12,7 +12,7 @@ import colors as c
 from libtodo import Task, Project
 
 #--------[ GLOBALS ]-----------------------------------------------------------
-VERSION     = "0.4"
+VERSION     = "0.6"
 CONFIG      = "todo_config.ini"
 TODO_DIR    = os.path.dirname(os.path.realpath(sys.argv[0]))
 
