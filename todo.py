@@ -225,15 +225,39 @@ Utilities:
             print("       Please decrypt with `todo util decrypt` first")
 
     elif args[0] == "encrypt":
-        password = getpass.getpass("Password: ")
-        print("Encrypting %s..." % TODO_FILE)
-        retval = util.encrypt_file(TODO_FILE, TODO_FILE, password)
+        print("\nEncrypting TODO file located at: %s" % TODO_FILE)
+        password1 = getpass.getpass("Password: ")
+        password2 = getpass.getpass("Repeat Password: ")
+        if password1 != password2:
+            print("ERROR: Passwords do not match!")
+            exit(2)
+        else:
+            print("\nEncrypting...", end="")
+            retval = util.encrypt_file(TODO_FILE, TODO_FILE, password1)
+            if retval != 0:
+                print("\rERROR: There was a problem encrypting the file")
+                exit(2)
+            print("Done")
+
+            print("\nEncryption of TODO file was successful.")
+            print("Be sure to change the config file to reflect")
+            print("'Encryption = True'")
 
     elif args[0] == "decrypt":
+        print("\nDecrypting TODO file located at: %s" % TODO_FILE)
         password = getpass.getpass("Password: ")
-        print("Decrypting %s..." % TODO_FILE)
+        print("\nDecrypting...", end="")
 
         retval = util.decrypt_file(TODO_FILE, TODO_FILE, password)
+        if retval != 0:
+            print("\rERROR: There was a problem decrypting the file")
+            exit(2)
+        print("Done")
+
+
+        print("\nDecryption of TODO file was successful.")
+        print("Be sure to change the config file to reflect")
+        print("'Encryption = False'")
     else:
         Usage(args)
 
