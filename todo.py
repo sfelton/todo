@@ -58,7 +58,14 @@ def Version(args):
 def list_tasks(args):
     print(c.Bold+"--------TODO List--------"+c.NoC)
     file_data = lib.read_todo_file(TODO_FILE, ENCRYPTED, aes_passphrase)
-    lib.list_all_tasks(file_data)
+
+    #Check if only one project should be printed
+    if args[0] == "--project":
+        for p in file_data:
+            if p.name == args[1]:
+                lib.list_all_tasks([p])
+    else:
+        lib.list_all_tasks(file_data)
 
 #### add_task ###########################################
 #                                                       #
